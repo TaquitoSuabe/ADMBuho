@@ -32,54 +32,63 @@ apt-get update -qq >/dev/null 2>&1 || true
 apt-get install -y -qq curl wget libpam-runtime >/dev/null 2>&1 || true
 
 # 3. Ubicación o descarga de binarios
-# Si se ejecuta localmente desde el repositorio, copia los binarios
-BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+systemctl stop buho-monitor 2>/dev/null || true
 
+safe_download() {
+    local url="$1"
+    local dest="$2"
+    local tmp="${dest}.tmp"
+    curl -fsSL "$url" -o "$tmp"
+    chmod +x "$tmp"
+    mv -f "$tmp" "$dest"
+}
+
+safe_install() {
+    local src="$1"
+    local dest="$2"
+    local tmp="${dest}.tmp"
+    cp -f "$src" "$tmp"
+    chmod +x "$tmp"
+    mv -f "$tmp" "$dest"
+}
+
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_BASE="https://raw.githubusercontent.com/TaquitoSuabe/ADMBuho/main/extras"
 
 if [ -f "$BASE_DIR/target/x86_64-unknown-linux-musl/release/admbuho" ]; then
     echo -e "${C_GREEN}[+] Instalando binarios locales compilados...${C_RESET}"
-    cp -f "$BASE_DIR/target/x86_64-unknown-linux-musl/release/admbuho" /usr/local/bin/admbuho
-    cp -f "$BASE_DIR/target/x86_64-unknown-linux-musl/release/buho-auth" /usr/local/bin/buho-auth
-    cp -f "$BASE_DIR/target/x86_64-unknown-linux-musl/release/buho-monitor" /usr/local/bin/buho-monitor
+    safe_install "$BASE_DIR/target/x86_64-unknown-linux-musl/release/admbuho" /usr/local/bin/admbuho
+    safe_install "$BASE_DIR/target/x86_64-unknown-linux-musl/release/buho-auth" /usr/local/bin/buho-auth
+    safe_install "$BASE_DIR/target/x86_64-unknown-linux-musl/release/buho-monitor" /usr/local/bin/buho-monitor
 elif [ -f "$BASE_DIR/extras/admbuho" ]; then
     echo -e "${C_GREEN}[+] Instalando binarios desde extras/...${C_RESET}"
-    cp -f "$BASE_DIR/extras/admbuho" /usr/local/bin/admbuho
-    cp -f "$BASE_DIR/extras/buho-auth" /usr/local/bin/buho-auth
-    cp -f "$BASE_DIR/extras/buho-monitor" /usr/local/bin/buho-monitor
+    safe_install "$BASE_DIR/extras/admbuho" /usr/local/bin/admbuho
+    safe_install "$BASE_DIR/extras/buho-auth" /usr/local/bin/buho-auth
+    safe_install "$BASE_DIR/extras/buho-monitor" /usr/local/bin/buho-monitor
 else
     echo -e "${C_YELLOW}[+] Descargando binarios precompilados...${C_RESET}"
-    curl -fsSL "$REPO_BASE/admbuho" -o /usr/local/bin/admbuho
-    curl -fsSL "$REPO_BASE/buho-auth" -o /usr/local/bin/buho-auth
-    curl -fsSL "$REPO_BASE/buho-monitor" -o /usr/local/bin/buho-monitor
+    safe_download "$REPO_BASE/admbuho" /usr/local/bin/admbuho
+    safe_download "$REPO_BASE/buho-auth" /usr/local/bin/buho-auth
+    safe_download "$REPO_BASE/buho-monitor" /usr/local/bin/buho-monitor
 fi
 
 # Copiar o descargar binarios auxiliares oficiales de Chumo
 if [ -f "$BASE_DIR/extras/SlowDNS.bin" ]; then
     echo -e "${C_GREEN}[+] Copiando binarios auxiliares desde extras/...${C_RESET}"
-    cp -f "$BASE_DIR/extras/badvpn-udpgw" /usr/local/bin/
-    cp -f "$BASE_DIR/extras/SlowDNS.bin" /usr/local/bin/
-    cp -f "$BASE_DIR/extras/udp-amd64.bin" /usr/local/bin/
+    safe_install "$BASE_DIR/extras/badvpn-udpgw" /usr/local/bin/badvpn-udpgw
+    safe_install "$BASE_DIR/extras/SlowDNS.bin" /usr/local/bin/SlowDNS.bin
+    safe_install "$BASE_DIR/extras/udp-amd64.bin" /usr/local/bin/udp-amd64.bin
 elif [ -d "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS" ]; then
     echo -e "${C_GREEN}[+] Copiando binarios auxiliares oficiales de Chumo...${C_RESET}"
-    [ -f "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/x86_64/badvpn-udpgw" ] && cp -f "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/x86_64/badvpn-udpgw" /usr/local/bin/
-    [ -f "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/x86_64/SlowDNS.bin" ] && cp -f "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/x86_64/SlowDNS.bin" /usr/local/bin/
-    [ -f "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/udp-amd64.bin" ] && cp -f "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/udp-amd64.bin" /usr/local/bin/
+    [ -f "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/x86_64/badvpn-udpgw" ] && safe_install "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/x86_64/badvpn-udpgw" /usr/local/bin/badvpn-udpgw
+    [ -f "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/x86_64/SlowDNS.bin" ] && safe_install "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/x86_64/SlowDNS.bin" /usr/local/bin/SlowDNS.bin
+    [ -f "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/udp-amd64.bin" ] && safe_install "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/udp-amd64.bin" /usr/local/bin/udp-amd64.bin
 else
     echo -e "${C_YELLOW}[+] Descargando binarios auxiliares oficiales...${C_RESET}"
-    curl -fsSL "$REPO_BASE/badvpn-udpgw" -o /usr/local/bin/badvpn-udpgw
-    curl -fsSL "$REPO_BASE/SlowDNS.bin" -o /usr/local/bin/SlowDNS.bin
-    curl -fsSL "$REPO_BASE/udp-amd64.bin" -o /usr/local/bin/udp-amd64.bin
+    safe_download "$REPO_BASE/badvpn-udpgw" /usr/local/bin/badvpn-udpgw
+    safe_download "$REPO_BASE/SlowDNS.bin" /usr/local/bin/SlowDNS.bin
+    safe_download "$REPO_BASE/udp-amd64.bin" /usr/local/bin/udp-amd64.bin
 fi
-
-
-# Permisos de ejecución
-chmod +x /usr/local/bin/admbuho 2>/dev/null || true
-chmod +x /usr/local/bin/buho-auth 2>/dev/null || true
-chmod +x /usr/local/bin/buho-monitor 2>/dev/null || true
-chmod +x /usr/local/bin/badvpn-udpgw 2>/dev/null || true
-chmod +x /usr/local/bin/SlowDNS.bin 2>/dev/null || true
-chmod +x /usr/local/bin/udp-amd64.bin 2>/dev/null || true
 
 # Enlaces simbólicos estándar
 ln -sf /usr/local/bin/admbuho /usr/bin/menu
