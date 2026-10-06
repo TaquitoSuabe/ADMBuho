@@ -29,7 +29,7 @@ mkdir -p /etc/ADMBuho/proxies
 # 2. Instalar dependencias esenciales mínimas
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq >/dev/null 2>&1 || true
-apt-get install -y -qq curl wget libpam-runtime >/dev/null 2>&1 || true
+apt-get install -y -qq curl wget libpam-runtime net-tools lsof jq iptables socat unzip cron ca-certificates >/dev/null 2>&1 || true
 
 # 3. Ubicación o descarga de binarios
 systemctl stop buho-monitor 2>/dev/null || true
