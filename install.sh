@@ -167,14 +167,17 @@ if [ -f "$BASE_DIR/extras/SlowDNS.bin" ]; then
     anim_copy "BADVPN-UDPGW" "$BASE_DIR/extras/badvpn-udpgw" /usr/local/bin/badvpn-udpgw
     anim_copy "SLOWDNS SERVER" "$BASE_DIR/extras/SlowDNS.bin" /usr/local/bin/SlowDNS.bin
     anim_copy "UDP-CUSTOM CORE" "$BASE_DIR/extras/udp-amd64.bin" /usr/local/bin/udp-amd64.bin
+    [ -f "$BASE_DIR/extras/zivpn" ] && anim_copy "ZIVPN UDP CORE" "$BASE_DIR/extras/zivpn" /usr/local/bin/zivpn
 elif [ -d "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS" ]; then
     [ -f "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/x86_64/badvpn-udpgw" ] && anim_copy "BADVPN-UDPGW" "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/x86_64/badvpn-udpgw" /usr/local/bin/badvpn-udpgw
     [ -f "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/x86_64/SlowDNS.bin" ] && anim_copy "SLOWDNS SERVER" "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/x86_64/SlowDNS.bin" /usr/local/bin/SlowDNS.bin
     [ -f "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/udp-amd64.bin" ] && anim_copy "UDP-CUSTOM CORE" "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/udp-amd64.bin" /usr/local/bin/udp-amd64.bin
+    [ -f "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/UDP/ZipVPN/udp-x64_v2.bin" ] && anim_copy "ZIVPN UDP CORE" "$BASE_DIR/admchg_latamsrc/VERSIONWEB/BINARIOS/UDP/ZipVPN/udp-x64_v2.bin" /usr/local/bin/zivpn
 else
     anim_download "BADVPN-UDPGW" "$REPO_BASE/badvpn-udpgw" /usr/local/bin/badvpn-udpgw
     anim_download "SLOWDNS SERVER" "$REPO_BASE/SlowDNS.bin" /usr/local/bin/SlowDNS.bin
     anim_download "UDP-CUSTOM CORE" "$REPO_BASE/udp-amd64.bin" /usr/local/bin/udp-amd64.bin
+    anim_download "ZIVPN UDP CORE" "$REPO_BASE/zivpn" /usr/local/bin/zivpn
 fi
 
 # Enlaces simbólicos estándar
@@ -182,6 +185,7 @@ ln -sf /usr/local/bin/admbuho /usr/bin/menu
 ln -sf /usr/local/bin/admbuho /usr/bin/admbuho
 ln -sf /usr/local/bin/SlowDNS.bin /usr/local/bin/dns-server
 ln -sf /usr/local/bin/udp-amd64.bin /usr/local/bin/udp-custom
+ln -sf /usr/local/bin/zivpn /bin/zivpn 2>/dev/null || true
 
 msg_bar
 echo -e "${C_YELLOW}  [+] CONFIGURANDO INTEGRACIONES DEL SISTEMA...${C_RESET}"
