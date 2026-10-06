@@ -136,7 +136,7 @@ msg_bar3
 echo -e "${C_YELLOW}  [+] INSTALANDO DEPENDENCIAS ESENCIALES...${C_RESET}"
 msg_bar3
 
-pkgs=(curl wget ca-certificates libpam-runtime net-tools lsof jq iptables socat unzip cron)
+pkgs=(curl wget ca-certificates libpam-runtime net-tools lsof jq iptables socat unzip cron python3)
 for p in "${pkgs[@]}"; do
     anim_pkg "$p"
 done
