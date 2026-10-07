@@ -21,22 +21,14 @@ REPO_BIN="https://raw.githubusercontent.com/TaquitoSuabe/ADMBuho/main/extras/buh
 
 # Reconectar stdin a la terminal /dev/tty si viene por tubería (curl | bash)
 if [ ! -t 0 ] && [ -c /dev/tty ]; then
-    exec < /dev/tty
+    exec < /dev/tty 2>/dev/null || true
 fi
 
 # 1. Usar binario local precompilado si existe
 if [ -n "$BASE_DIR" ] && [ -f "$BASE_DIR/target/x86_64-unknown-linux-musl/release/buho-installer" ]; then
-    if [ -c /dev/tty ]; then
-        exec "$BASE_DIR/target/x86_64-unknown-linux-musl/release/buho-installer" "$@" < /dev/tty
-    else
-        exec "$BASE_DIR/target/x86_64-unknown-linux-musl/release/buho-installer" "$@"
-    fi
+    exec "$BASE_DIR/target/x86_64-unknown-linux-musl/release/buho-installer" "$@"
 elif [ -n "$BASE_DIR" ] && [ -f "$BASE_DIR/extras/buho-installer" ]; then
-    if [ -c /dev/tty ]; then
-        exec "$BASE_DIR/extras/buho-installer" "$@" < /dev/tty
-    else
-        exec "$BASE_DIR/extras/buho-installer" "$@"
-    fi
+    exec "$BASE_DIR/extras/buho-installer" "$@"
 fi
 
 # 2. Descargar instalador precompilado oficial
@@ -55,9 +47,5 @@ fi
 chmod +x "$TMP_BIN"
 trap 'rm -f "$TMP_BIN"' EXIT INT TERM
 
-# 3. Ejecutar instalador compilado conectando tty si existe
-if [ -c /dev/tty ]; then
-    exec "$TMP_BIN" "$@" < /dev/tty
-else
-    exec "$TMP_BIN" "$@"
-fi
+# 3. Ejecutar instalador compilado oficial
+exec "$TMP_BIN" "$@"
