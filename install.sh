@@ -1,51 +1,95 @@
 #!/bin/bash
-# ========================================================
-# Instalador Oficial ADMBuho (@El_IBuhonero)
-# ========================================================
+# ============================================================
+#  ADMBuho Official One-Line Installer (@El_IBuhonero)
+# ============================================================
 set -e
 
-if [ "$EUID" -ne 0 ]; then
-    echo "ERROR: Debe ejecutar el instalador como root (sudo -i)."
-    exit 1
-fi
+main() {
+    REPO="TaquitoSuabe/ADMBuho"
 
-C_CYAN='\033[0;36m'
-C_GREEN='\033[0;32m'
-C_YELLOW='\033[1;33m'
-C_RED='\033[0;31m'
-C_RESET='\033[0m'
+    # Verificar permisos de root
+    if [ "$EUID" -ne 0 ]; then
+        echo -e "\033[0;31m[ADMBuho] ERROR: Debe ejecutar el instalador como root (sudo -i).\033[0m"
+        exit 1
+    fi
 
-BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "")"
-TMP_BIN="/tmp/buho-installer"
-REPO_BIN="https://raw.githubusercontent.com/TaquitoSuabe/ADMBuho/main/extras/buho-installer"
+    # Detectar Arquitectura
+    ARCH=$(uname -m)
+    case "$ARCH" in
+        x86_64)          TARGET_ARCH="x86_64" ;;
+        *) 
+            echo -e "\033[0;31m[ADMBuho] Error: Arquitectura $ARCH no soportada.\033[0m"
+            exit 1
+            ;;
+    esac
 
-# Reconectar stdin a la terminal /dev/tty si viene por tubería (curl | bash)
-if [ ! -t 0 ] && [ -c /dev/tty ] && true < /dev/tty 2>/dev/null; then
-    exec < /dev/tty
-fi
+    BINARY="buho-installer"
+    DEST="/tmp/buho-installer"
 
-# 1. Usar binario local precompilado si existe
-if [ -n "$BASE_DIR" ] && [ -f "$BASE_DIR/target/x86_64-unknown-linux-musl/release/buho-installer" ]; then
-    exec "$BASE_DIR/target/x86_64-unknown-linux-musl/release/buho-installer" "$@"
-elif [ -n "$BASE_DIR" ] && [ -f "$BASE_DIR/extras/buho-installer" ]; then
-    exec "$BASE_DIR/extras/buho-installer" "$@"
-fi
+    # Cleanup al salir
+    trap 'rm -f "$DEST"' EXIT INT TERM
 
-# 2. Descargar instalador precompilado oficial
-echo -e "${C_CYAN}[•]${C_RESET} ${C_YELLOW}Preparando instalador oficial ADMBuho...${C_RESET}"
-if command -v curl >/dev/null 2>&1; then
-    curl -fsSL "$REPO_BIN" -o "$TMP_BIN"
-elif command -v wget >/dev/null 2>&1; then
-    wget -qO "$TMP_BIN" "$REPO_BIN"
-else
-    export DEBIAN_FRONTEND=noninteractive
-    apt-get update -qq >/dev/null 2>&1
-    apt-get install -y -qq curl ca-certificates >/dev/null 2>&1
-    curl -fsSL "$REPO_BIN" -o "$TMP_BIN"
-fi
+    # Colores
+    CYAN='\033[0;36m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+    RED='\033[0;31m'
+    RESET='\033[0m'
 
-chmod +x "$TMP_BIN"
-trap 'rm -f "$TMP_BIN"' EXIT INT TERM
+    echo -e "${CYAN}[•]${RESET} ${YELLOW}Preparando Instalador Oficial ADMBuho (@El_IBuhonero)...${RESET}"
 
-# 3. Ejecutar instalador compilado oficial
-exec "$TMP_BIN" "$@"
+    # Si existe un binario local en el entorno de desarrollo/pruebas, usarlo
+    BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "")"
+    if [ -n "$BASE_DIR" ] && [ -f "$BASE_DIR/target/x86_64-unknown-linux-musl/release/$BINARY" ]; then
+        cp "$BASE_DIR/target/x86_64-unknown-linux-musl/release/$BINARY" "$DEST"
+        chmod +x "$DEST"
+    elif [ -n "$BASE_DIR" ] && [ -f "$BASE_DIR/extras/$BINARY" ]; then
+        cp "$BASE_DIR/extras/$BINARY" "$DEST"
+        chmod +x "$DEST"
+    else
+        # Descargar desde GitHub Oficial
+        URL="https://raw.githubusercontent.com/$REPO/main/extras/$BINARY"
+
+        download_bin() {
+            local u="$1"
+            local d="$2"
+            if command -v curl &>/dev/null; then
+                if curl -4 -fsSL --connect-timeout 15 "$u" -o "$d"; then
+                    return 0
+                fi
+            fi
+            if command -v wget &>/dev/null; then
+                if wget -4 -q --timeout=15 "$u" -O "$d"; then
+                    return 0
+                fi
+            fi
+            return 1
+        }
+
+        if ! download_bin "$URL" "$DEST"; then
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update -qq >/dev/null 2>&1 || true
+            apt-get install -y -qq curl ca-certificates >/dev/null 2>&1 || true
+            if ! download_bin "$URL" "$DEST"; then
+                echo -e "${RED}[ADMBuho] Error: No se pudo descargar el instalador desde $URL${RESET}"
+                exit 1
+            fi
+        fi
+        chmod +x "$DEST"
+    fi
+
+    # Detectar si hay una terminal TTY disponible para entrada
+    HAS_TTY=false
+    if (exec < /dev/tty) 2>/dev/null; then
+        HAS_TTY=true
+    fi
+
+    # Ejecutar con terminal interactiva si está disponible
+    if [ "$HAS_TTY" = true ]; then
+        "$DEST" "$@" < /dev/tty
+    else
+        "$DEST" "$@"
+    fi
+}
+
+main "$@"
