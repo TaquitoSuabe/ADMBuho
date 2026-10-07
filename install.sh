@@ -20,8 +20,8 @@ TMP_BIN="/tmp/buho-installer"
 REPO_BIN="https://raw.githubusercontent.com/TaquitoSuabe/ADMBuho/main/extras/buho-installer"
 
 # Reconectar stdin a la terminal /dev/tty si viene por tubería (curl | bash)
-if [ ! -t 0 ] && [ -c /dev/tty ]; then
-    exec < /dev/tty 2>/dev/null || true
+if [ ! -t 0 ] && [ -c /dev/tty ] && true < /dev/tty 2>/dev/null; then
+    exec < /dev/tty
 fi
 
 # 1. Usar binario local precompilado si existe
