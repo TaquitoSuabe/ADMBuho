@@ -48,18 +48,18 @@ main() {
         chmod +x "$DEST"
     else
         # Descargar desde GitHub Oficial
-        URL="https://raw.githubusercontent.com/$REPO/main/extras/$BINARY"
+        URL="https://raw.githubusercontent.com/$REPO/main/extras/$BINARY?v=$(date +%s)"
 
         download_bin() {
             local u="$1"
             local d="$2"
             if command -v curl &>/dev/null; then
-                if curl -4 -fsSL --connect-timeout 15 "$u" -o "$d"; then
+                if curl -4 -fsSL -H "Cache-Control: no-cache" --connect-timeout 15 "$u" -o "$d"; then
                     return 0
                 fi
             fi
             if command -v wget &>/dev/null; then
-                if wget -4 -q --timeout=15 "$u" -O "$d"; then
+                if wget -4 -q --no-cache --timeout=15 "$u" -O "$d"; then
                     return 0
                 fi
             fi
