@@ -71,15 +71,23 @@ main() {
             # Soporte de rescate para Debian 10 (Buster EOL) si no tiene curl instalado
             if [ -f /etc/debian_version ] && grep -qs '^10' /etc/debian_version; then
                 mkdir -p /etc/apt/apt.conf.d
-                echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99archive
-                cat << 'EOF' > /etc/apt/sources.list
-deb [check-valid-until=no] http://archive.debian.org/debian/ buster main contrib non-free
-deb [check-valid-until=no] http://archive.debian.org/debian/ buster-updates main contrib non-free
-deb [check-valid-until=no] http://archive.debian.org/debian-security buster/updates main contrib non-free
+                cat << 'EOF' > /etc/apt/apt.conf.d/99archive
+Acquire::Check-Valid-Until "false";
+Acquire::AllowInsecureRepositories "true";
+Acquire::AllowDowngradeToInsecureRepositories "true";
+APT::Get::AllowUnauthenticated "true";
 EOF
+                cat << 'EOF' > /etc/apt/sources.list
+deb [check-valid-until=no trusted=yes] http://archive.debian.org/debian/ buster main contrib non-free
+deb [check-valid-until=no trusted=yes] http://archive.debian.org/debian/ buster-updates main contrib non-free
+deb [check-valid-until=no trusted=yes] http://archive.debian.org/debian-security buster/updates main contrib non-free
+EOF
+                for f in /etc/apt/sources.list.d/*.list; do
+                    [ -f "$f" ] && mv "$f" "${f}.buho.bak"
+                done
             fi
-            apt-get update -qq >/dev/null 2>&1 || true
-            apt-get install -y -qq curl ca-certificates >/dev/null 2>&1 || true
+            apt-get update -o Acquire::Check-Valid-Until=false -o Acquire::AllowInsecureRepositories=true --allow-unauthenticated -qq >/dev/null 2>&1 || true
+            apt-get install -y --allow-unauthenticated -qq curl ca-certificates >/dev/null 2>&1 || true
             if ! download_bin "$URL" "$DEST"; then
                 echo -e "${RED}[ADMBuho] Error: No se pudo descargar el instalador desde $URL${RESET}"
                 exit 1
@@ -87,6 +95,10 @@ EOF
         fi
         chmod +x "$DEST"
     fi
+
+    # Restaurar modos de terminal para evitar efectos de escalera (staircase effect)
+    stty sane 2>/dev/null || true
+    stty onlcr 2>/dev/null || true
 
     # Detectar si hay una terminal TTY disponible para entrada
     HAS_TTY=false
@@ -100,6 +112,9 @@ EOF
     else
         "$DEST" "$@"
     fi
+
+    stty sane 2>/dev/null || true
+    stty onlcr 2>/dev/null || true
 }
 
 main "$@"
