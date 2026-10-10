@@ -68,6 +68,16 @@ main() {
 
         if ! download_bin "$URL" "$DEST"; then
             export DEBIAN_FRONTEND=noninteractive
+            # Soporte de rescate para Debian 10 (Buster EOL) si no tiene curl instalado
+            if [ -f /etc/debian_version ] && grep -qs '^10' /etc/debian_version; then
+                mkdir -p /etc/apt/apt.conf.d
+                echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99archive
+                cat << 'EOF' > /etc/apt/sources.list
+deb [check-valid-until=no] http://archive.debian.org/debian/ buster main contrib non-free
+deb [check-valid-until=no] http://archive.debian.org/debian/ buster-updates main contrib non-free
+deb [check-valid-until=no] http://archive.debian.org/debian-security buster/updates main contrib non-free
+EOF
+            fi
             apt-get update -qq >/dev/null 2>&1 || true
             apt-get install -y -qq curl ca-certificates >/dev/null 2>&1 || true
             if ! download_bin "$URL" "$DEST"; then
