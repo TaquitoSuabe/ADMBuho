@@ -16,14 +16,22 @@ main() {
     # Detectar Arquitectura
     ARCH=$(uname -m)
     case "$ARCH" in
-        x86_64)          TARGET_ARCH="x86_64" ;;
+        x86_64|amd64)
+            TARGET_ARCH="x86_64"
+            BINARY="buho-installer"
+            LOCAL_TARGET="target/x86_64-unknown-linux-musl/release/buho-installer"
+            ;;
+        aarch64|arm64)
+            TARGET_ARCH="aarch64"
+            BINARY="buho-installer-aarch64"
+            LOCAL_TARGET="target/aarch64-unknown-linux-musl/release/buho-installer"
+            ;;
         *) 
-            echo -e "\033[0;31m[ADMBuho] Error: Arquitectura $ARCH no soportada.\033[0m"
+            echo -e "\033[0;31m[ADMBuho] Error: Arquitectura $ARCH no soportada. Solo x86_64 y aarch64.\033[0m"
             exit 1
             ;;
     esac
 
-    BINARY="buho-installer"
     DEST="/tmp/buho-installer"
 
     # Cleanup al salir
@@ -36,12 +44,12 @@ main() {
     RED='\033[0;31m'
     RESET='\033[0m'
 
-    echo -e "${CYAN}[•]${RESET} ${YELLOW}Preparando Instalador Oficial ADMBuho (@El_IBuhonero)...${RESET}"
+    echo -e "${CYAN}[•]${RESET} ${YELLOW}Preparando Instalador Oficial ADMBuho (@El_IBuhonero) [$TARGET_ARCH]...${RESET}"
 
     # Si existe un binario local en el entorno de desarrollo/pruebas, usarlo
     BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "")"
-    if [ -n "$BASE_DIR" ] && [ -f "$BASE_DIR/target/x86_64-unknown-linux-musl/release/$BINARY" ]; then
-        cp "$BASE_DIR/target/x86_64-unknown-linux-musl/release/$BINARY" "$DEST"
+    if [ -n "$BASE_DIR" ] && [ -f "$BASE_DIR/$LOCAL_TARGET" ]; then
+        cp "$BASE_DIR/$LOCAL_TARGET" "$DEST"
         chmod +x "$DEST"
     elif [ -n "$BASE_DIR" ] && [ -f "$BASE_DIR/extras/$BINARY" ]; then
         cp "$BASE_DIR/extras/$BINARY" "$DEST"
