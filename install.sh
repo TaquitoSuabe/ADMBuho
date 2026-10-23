@@ -88,6 +88,7 @@ EOF
                 cat << 'EOF' > /etc/apt/sources.list
 deb [check-valid-until=no trusted=yes] http://archive.debian.org/debian/ buster main contrib non-free
 deb [check-valid-until=no trusted=yes] http://archive.debian.org/debian/ buster-updates main contrib non-free
+deb [check-valid-until=no trusted=yes] http://archive.debian.org/debian/ buster-backports main contrib non-free
 deb [check-valid-until=no trusted=yes] http://archive.debian.org/debian-security buster/updates main contrib non-free
 EOF
                 for f in /etc/apt/sources.list.d/*.list; do
