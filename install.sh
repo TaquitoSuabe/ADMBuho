@@ -46,6 +46,13 @@ main() {
 
     echo -e "${CYAN}[•]${RESET} ${YELLOW}Preparando Instalador Oficial ADMBuho (@El_IBuhonero) [$TARGET_ARCH]...${RESET}"
 
+    # Garantizar herramientas de red básicas (curl, ca-certificates) si faltan en el sistema
+    if ! command -v curl &>/dev/null && command -v apt-get &>/dev/null; then
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update -qq >/dev/null 2>&1 || true
+        apt-get install -y --allow-unauthenticated -qq curl ca-certificates >/dev/null 2>&1 || true
+    fi
+
     # Si existe un binario local en el entorno de desarrollo/pruebas, usarlo
     BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "")"
     if [ -n "$BASE_DIR" ] && [ -f "$BASE_DIR/$LOCAL_TARGET" ]; then
